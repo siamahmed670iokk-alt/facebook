@@ -29,8 +29,8 @@ jobs:
     - name: Install dependencies and copy assets
       run: |
         npm install
-        npx @capacitor/cli copy android
-        npx @capacitor/cli update android
+        node_modules/.bin/cap copy android
+        node_modules/.bin/cap update android
 
     - name: Grant execute permission for gradlew
       working-directory: ./android
