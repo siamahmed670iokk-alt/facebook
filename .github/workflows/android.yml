@@ -26,9 +26,10 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Install dependencies and sync capacitor
+    - name: Install dependencies, build web and sync capacitor
       run: |
         npm install
+        npm run build --if-present
         npm install -g @capacitor/cli
         npx cap sync android
 
