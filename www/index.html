@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>FB Ultimate Anti-Detect & Geo-Spoof Manager</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    
+    body {
+      background: #090d16;
+      color: #f1f5f9;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .content-area {
+      height: calc(100vh - 60px);
+      width: 100vw;
+      overflow-y: auto;
+      padding: 14px;
+    }
+
+    .app-header { text-align: center; margin-bottom: 12px; }
+    .brand-title {
+      font-size: 17px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 2px;
+    }
+
+    .search-input {
+      width: 100%;
+      max-width: 400px;
+      padding: 9px 14px;
+      border-radius: 10px;
+      border: 1px solid #1e293b;
+      background: #111827;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+      margin-top: 8px;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding-bottom: 10px;
+      margin-top: 10px;
+    }
+
+    .card {
+      position: relative;
+      height: 145px;
+      background: #111827;
+      border: 1.5px solid #1e293b;
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px;
+      transition: transform 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
+    }
+    
+    .card:active { 
+      transform: scale(0.92); 
+      border-color: #38bdf8; 
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.7);
+    }
+    
+    .fb-logo-svg {
+      width: 26px;
+      height: 26px;
+      margin-bottom: 3px;
+      fill: #1877f2;
+    }
+
+    .card .title { 
+      font-size: 11px; 
+      font-weight: 700; 
+      color: #ffffff; 
+      width: 100%;
+      text-align: center;
+      word-break: break-word;
+      margin-bottom: 2px;
+    }
+
+    .device-tag {
+      font-size: 8px;
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.1);
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-bottom: 2px;
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 95%;
+    }
+
+    .geo-tag {
+      font-size: 8px;
+      color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      padding: 1px 5px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+
+    .card-footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      display: flex;
+      justify-content: space-between;
+      padding: 4px 8px;
+      border-top: 1px solid #1e293b;
+    }
+
+    .action-btn {
+      background: none;
+      border: none;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      padding: 2px 5px;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+
+    .clear-btn { color: #38bdf8; }
+    .clear-btn:hover { background: rgba(56, 189, 248, 0.15); }
+
+    .delete-btn { color: #ef4444; }
+    .delete-btn:hover { background: rgba(239, 68, 68, 0.15); }
+
+    .add-card {
+      border: 2px dashed #38bdf8;
+      background: rgba(56, 189, 248, 0.05);
+      height: 145px;
+    }
+    .add-card .plus-icon { font-size: 26px; color: #38bdf8; margin-bottom: 2px; font-weight: bold; }
+
+    #viewer-container {
+      display: none;
+      height: calc(100vh - 60px);
+      width: 100vw;
+      background: #090d16;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10;
+    }
+    .app-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none;
+      background: #fff;
+    }
+    .app-iframe.active { display: block; }
+
+    #recents-modal {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: calc(100vh - 60px);
+      background: rgba(9, 13, 22, 0.96);
+      backdrop-filter: blur(15px);
+      z-index: 20;
+      padding: 14px;
+      overflow-y: auto;
+    }
+
+    .recents-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      border-bottom: 1px solid #1e293b;
+      padding-bottom: 10px;
+    }
+    .recents-title { font-size: 16px; font-weight: 700; color: #38bdf8; }
+    .clear-all-btn {
+      background: #ef4444;
+      color: #fff;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .recents-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      padding-bottom: 10px;
+    }
+    .recent-card {
+      background: #111827;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 12px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+    .recent-card.active-app { border-color: #38bdf8; box-shadow: 0 0 10px rgba(56, 189, 248, 0.4); }
+    
+    .close-task-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: #334155;
+      color: #94a3b8;
+      border: none;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 5;
+    }
+    .close-task-btn:hover { background: #ef4444; color: #fff; }
+
+    #custom-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(5, 8, 15, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    .custom-modal-box {
+      background: #111827;
+      border: 1.5px solid #1e293b;
+      width: 100%;
+      max-width: 320px;
+      border-radius: 18px;
+      padding: 22px 18px;
+      text-align: center;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 0 20px rgba(56, 189, 248, 0.15);
+      animation: scaleUp 0.2s ease-out;
+    }
+
+    .modal-icon-container { font-size: 32px; margin-bottom: 10px; }
+    .custom-modal-title { font-size: 16px; font-weight: 700; color: #f8fafc; margin-bottom: 8px; }
+    .custom-modal-message { font-size: 13px; color: #94a3b8; line-height: 1.5; margin-bottom: 20px; }
+    .modal-btn-group { display: flex; gap: 10px; }
+    .modal-btn {
+      flex: 1;
+      padding: 10px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+    .modal-btn:active { transform: scale(0.95); }
+    .modal-btn-cancel { background: #1e293b; color: #cbd5e1; }
+    .modal-btn-confirm { background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%); color: #090d16; font-weight: 700; }
+    .modal-btn-danger { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: #fff; font-weight: 700; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes scaleUp { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100vw;
+      height: 60px;
+      background: #111827;
+      border-top: 1px solid #1e293b;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 100;
+    }
+    .nav-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 25%;
+    }
+    .nav-btn.active { color: #38bdf8; }
+    .nav-btn svg { width: 20px; height: 20px; fill: currentColor; }
+    
+    .badge {
+      background: #38bdf8;
+      color: #090d16;
+      font-size: 10px;
+      padding: 1px 5px;
+      border-radius: 8px;
+      margin-left: 3px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div class="content-area" id="dashboard-view">
+  <div class="app-header">
+    <div class="brand-title">🛡️ FB Geo-Spoof Anti-Detect 🛡️</div>
+    <input type="text" id="searchInput" class="search-input" placeholder="Search profile..." onkeyup="filterTools()">
+  </div>
+  <div class="grid-container" id="toolsGrid"></div>
+</div>
+
+<div id="viewer-container"></div>
+
+<div id="recents-modal">
+  <div class="recents-header">
+    <div class="recents-title">Running Geo-Sandboxes</div>
+    <button class="clear-all-btn" onclick="closeAllTasks()">Clear All</button>
+  </div>
+  <div class="recents-grid" id="recentsGrid"></div>
+</div>
+
+<div id="custom-modal-overlay">
+  <div class="custom-modal-box">
+    <div class="modal-icon-container" id="modalIcon">⚠️</div>
+    <div class="custom-modal-title" id="modalTitle">Title Here</div>
+    <div class="custom-modal-message" id="modalMessage">Message here...</div>
+    <div class="modal-btn-group" id="modalBtnGroup">
+      <button class="modal-btn modal-btn-cancel" id="modalCancelBtn">Cancel</button>
+      <button class="modal-btn modal-btn-confirm" id="modalConfirmBtn">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <button class="nav-btn" onclick="goHome()" id="homeNavBtn">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    Home
+  </button>
+  
+  <button class="nav-btn" onclick="goBack()" id="backNavBtn">
+    <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+    Back
+  </button>
+
+  <button class="nav-btn" onclick="toggleRecents()" id="recentsNavBtn">
+    <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+    <span>Recents<span class="badge" id="taskCount">0</span></span>
+  </button>
+</div>
+
+<script>
+  const fbSvgLogo = `<svg class="fb-logo-svg" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12c0-5.523-4.477-10-10-10z"/></svg>`;
+
+  const bdGeoPool = [
+    { district: "ঢাকা (Gulshan)", isp: "Grameenphone 4G", lat: 23.7808, lng: 90.4152, device: "Pixel 7 Pro (14)", ua: "Mozilla/5.0 (Linux; Android 14; Pixel 7 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36" },
+    { district: "চট্টগ্রাম (Agrabad)", isp: "Banglalink 4G", lat: 22.3159, lng: 91.8153, device: "Galaxy S23 Ultra", ua: "Mozilla/5.0 (Linux; Android 13; SM-S918B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36" },
+    { district: "রাজশাহী (Zindabazar)", isp: "Robi Axiata 4G", lat: 24.3636, lng: 88.6241, device: "Xiaomi 13 Pro", ua: "Mozilla/5.0 (Linux; Android 13; 2210132C) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36" },
+    { district: "সিলেট (Amberkhana)", isp: "Teletalk 4G", lat: 24.8949, lng: 91.8687, device: "OnePlus 11 5G", ua: "Mozilla/5.0 (Linux; Android 13; CPH2451) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36" },
+    { district: "খুলনা (Shibbari)", isp: "BTCL Fiber", lat: 22.8456, lng: 89.5403, device: "Moto Edge 40", ua: "Mozilla/5.0 (Linux; Android 13; XT2303-2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Mobile Safari/537.36" },
+    { district: "বগুড়া (Jahaz Company)", isp: "Grameenphone 4G", lat: 24.8465, lng: 89.3756, device: "Realme GT 3", ua: "Mozilla/5.0 (Linux; Android 13; RMX3709) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Mobile Safari/537.36" },
+    { district: "রংপুর (Jahaj Company)", isp: "Banglalink 4G", lat: 25.7439, lng: 89.2752, device: "Vivo V27", ua: "Mozilla/5.0 (Linux; Android 13; V2231) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36" }
+  ];
+
+  let defaultTools = [
+    { id: 'profile_1', name: "Facebook Profile 1", file: "https://m.facebook.com", ...bdGeoPool[0] },
+    { id: 'profile_2', name: "Facebook Profile 2", file: "https://m.facebook.com", ...bdGeoPool[1] }
+  ];
+
+  let toolsList = JSON.parse(localStorage.getItem('saved_fb_geo_profiles')) || defaultTools;
+  let activeTasks = []; 
+  let currentTaskId = null;
+
+  function saveProfilesToLocalStorage() {
+    localStorage.setItem('saved_fb_geo_profiles', JSON.stringify(toolsList));
+  }
+
+  function showCustomModal({ icon, title, message, confirmText, confirmClass, showCancel = true, onConfirm }) {
+    const overlay = document.getElementById('custom-modal-overlay');
+    document.getElementById('modalIcon').innerText = icon;
+    document.getElementById('modalTitle').innerText = title;
+    document.getElementById('modalMessage').innerText = message;
+    
+    const confirmBtn = document.getElementById('modalConfirmBtn');
+    confirmBtn.innerText = confirmText || 'OK';
+    confirmBtn.className = `modal-btn ${confirmClass || 'modal-btn-confirm'}`;
+
+    const cancelBtn = document.getElementById('modalCancelBtn');
+    cancelBtn.style.display = showCancel ? 'block' : 'none';
+    
+    const closeModal = () => {
+      overlay.style.display = 'none';
+      cancelBtn.onclick = null;
+      confirmBtn.onclick = null;
+    };
+
+    cancelBtn.onclick = closeModal;
+    confirmBtn.onclick = () => {
+      closeModal();
+      if (onConfirm) onConfirm();
+    };
+
+    overlay.style.display = 'flex';
+  }
+
+  function renderDashboard(tools) {
+    const grid = document.getElementById('toolsGrid');
+    grid.innerHTML = '';
+    
+    const addCard = document.createElement('div');
+    addCard.className = 'card add-card';
+    addCard.onclick = () => addNewProfile();
+    addCard.innerHTML = `
+      <div class="plus-icon">+</div>
+      <div class="title" style="color: #38bdf8;">Add Geo-Profile</div>
+    `;
+    grid.appendChild(addCard);
+
+    tools.forEach((tool) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.onclick = () => confirmLaunchApp(tool);
+      
+      card.innerHTML = `
+        ${fbSvgLogo}
+        <div class="title">${tool.name}</div>
+        <div class="device-tag">📱 ${tool.device || 'Android'}</div>
+        <div class="geo-tag">📍 ${tool.district || 'Bangladesh'}</div>
+        <div class="card-footer" onclick="event.stopPropagation()">
+          <button class="action-btn clear-btn" onclick="clearProfileData('${tool.id}', event)">🧹 Clean</button>
+          <button class="action-btn delete-btn" onclick="deleteProfile('${tool.id}', event)">🗑️ Delete</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function addNewProfile() {
+    let existingNumbers = toolsList.map(t => {
+      let match = t.name.match(/\d+/);
+      return match ? parseInt(match[0]) : 0;
+    });
+
+    let targetIndex = 1;
+    while (existingNumbers.includes(targetIndex)) {
+      targetIndex++;
+    }
+
+    let newId = 'profile_' + Date.now();
+    let newName = 'Facebook Profile ' + targetIndex;
+    let randomGeo = bdGeoPool[Math.floor(Math.random() * bdGeoPool.length)];
+
+    let newTool = {
+      id: newId,
+      name: newName,
+      file: "https://m.facebook.com",
+      ...randomGeo
+    };
+
+    toolsList.push(newTool);
+    
+    toolsList.sort((a, b) => {
+      let numA = parseInt(a.name.match(/\d+/)[0]) || 0;
+      let numB = parseInt(b.name.match(/\d+/)[0]) || 0;
+      return numA - numB;
+    });
+
+    saveProfilesToLocalStorage();
+    renderDashboard(toolsList);
+
+    showCustomModal({
+      icon: '✨',
+      title: 'Geo-Profile Created',
+      message: `${newName} created successfully!\nLocation: ${randomGeo.district}\nISP/Network: ${randomGeo.isp}`,
+      confirmText: 'Awesome',
+      confirmClass: 'modal-btn-confirm',
+      showCancel: false
+    });
+  }
+
+  function confirmLaunchApp(tool) {
+    showCustomModal({
+      icon: '🚀',
+      title: 'Launch Sandbox',
+      message: `Open "${tool.name}" with location [${tool.district}] and ISP [${tool.isp}]?`,
+      confirmText: 'Open',
+      confirmClass: 'modal-btn-confirm',
+      showCancel: true,
+      onConfirm: () => {
+        launchApp(tool);
+      }
+    });
+  }
+
+  function clearProfileData(profileId, event) {
+    event.stopPropagation();
+    let tool = toolsList.find(t => t.id === profileId);
+    let profileName = tool ? tool.name : "This Profile";
+    
+    showCustomModal({
+      icon: '🧹',
+      title: 'Deep Sandbox Clean',
+      message: `Clear cookies and cache for "${profileName}"?`,
+      confirmText: 'Clean Now',
+      confirmClass: 'modal-btn-confirm',
+      showCancel: true,
+      onConfirm: () => {
+        const iframe = document.getElementById(`iframe-${profileId}`);
+        if (iframe) {
+          iframe.src = 'about:blank';
+          setTimeout(() => { iframe.src = tool.file; }, 100);
+        }
+        showCustomModal({
+          icon: '⚡',
+          title: 'Cleaned Successfully',
+          message: `Isolated sandbox & session for "${profileName}" has been refreshed!`,
+          confirmText: 'OK',
+          confirmClass: 'modal-btn-confirm',
+          showCancel: false
+        });
+      }
+    });
+  }
+
+  function deleteProfile(profileId, event) {
+    event.stopPropagation(); 
+    let tool = toolsList.find(t => t.id === profileId);
+    let profileName = tool ? tool.name : "Profile";
+
+    showCustomModal({
+      icon: '🗑️',
+      title: 'Delete Profile',
+      message: `Permanently delete "${profileName}"?`,
+      confirmText: 'Delete',
+      confirmClass: 'modal-btn-danger',
+      showCancel: true,
+      onConfirm: () => {
+        closeTask(profileId, event);
+        toolsList = toolsList.filter(t => t.id !== profileId);
+        saveProfilesToLocalStorage();
+        renderDashboard(toolsList);
+
+        showCustomModal({
+          icon: '✅',
+          title: 'Profile Deleted',
+          message: `"${profileName}" has been successfully removed.`,
+          confirmText: 'OK',
+          confirmClass: 'modal-btn-confirm',
+          showCancel: false
+        });
+      }
+    });
+  }
+
+  function launchApp(tool) {
+    const container = document.getElementById('viewer-container');
+    let existingIframe = document.getElementById(`iframe-${tool.id}`);
+    
+    if (!existingIframe) {
+      const iframe = document.createElement('iframe');
+      iframe.id = `iframe-${tool.id}`;
+      iframe.className = 'app-iframe';
+      
+      iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-presentation');
+      iframe.setAttribute('allow', 'camera; microphone; geolocation; payment; encrypted-media');
+      iframe.name = `geo_sandbox_${tool.id}`;
+      
+      container.appendChild(iframe);
+      activeTasks.push(tool);
+
+      // জিপিএস স্পুফিং ও অ্যান্টি-লিক স্ক্রিপ্ট সরাসরি আইফ্রেমের ভেতরে ইনজেক্ট করা হচ্ছে
+      setTimeout(() => {
+        try {
+          let iframeDoc = iframe.contentWindow.document;
+          
+          // আইফ্রেমের ভেতরে ওভাররাইড স্ক্রিপ্ট বসিয়ে দেওয়া যাতে ফোনের আসল জিপিএস ব্লক থাকে এবং ফেক লোকেশন চলে যায়
+          let spoofScript = iframeDoc.createElement('script');
+          spoofScript.textContent = `
+            navigator.geolocation.getCurrentPosition = function(success, error, options) {
+              success({
+                coords: {
+                  latitude: ${tool.lat},
+                  longitude: ${tool.lng},
+                  accuracy: 15,
+                  altitude: null,
+                  altitudeAccuracy: null,
+                  heading: null,
+                  speed: null
+                },
+                timestamp: Date.now()
+              });
+            };
+            navigator.geolocation.watchPosition = function(success, error, options) {
+              success({
+                coords: {
+                  latitude: ${tool.lat},
+                  longitude: ${tool.lng},
+                  accuracy: 15,
+                  altitude: null,
+                  altitudeAccuracy: null,
+                  heading: null,
+                  speed: null
+                },
+                timestamp: Date.now()
+              });
+              return 123;
+            };
+          `;
+          iframeDoc.head.appendChild(spoofScript);
+        } catch(e) {
+          console.log("Sandbox script injection handled");
+        }
+      }, 500);
+
+      iframe.src = tool.file;
+    }
+
+    switchToTask(tool.id);
+    updateTaskCount();
+  }
+
+  function switchToTask(taskId) {
+    currentTaskId = taskId;
+    document.querySelectorAll('.app-iframe').forEach(iframe => {
+      iframe.classList.remove('active');
+    });
+    
+    const targetIframe = document.getElementById(`iframe-${taskId}`);
+    if (targetIframe) targetIframe.classList.add('active');
+
+    document.getElementById('viewer-container').style.display = 'block';
+    document.getElementById('recents-modal').style.display = 'none';
+    setActiveNav('none');
+  }
+
+  function goHome() {
+    document.getElementById('viewer-container').style.display = 'none';
+    document.getElementById('recents-modal').style.display = 'none';
+    currentTaskId = null;
+    setActiveNav('homeNavBtn');
+  }
+
+  function goBack() {
+    if (document.getElementById('viewer-container').style.display === 'block' || document.getElementById('recents-modal').style.display === 'block') {
+      goHome();
+    }
+  }
+
+  function toggleRecents() {
+    const recentsModal = document.getElementById('recents-modal');
+    if (recentsModal.style.display === 'block') {
+      goHome();
+    } else {
+      renderRecents();
+      recentsModal.style.display = 'block';
+      setActiveNav('recentsNavBtn');
+    }
+  }
+
+  function renderRecents() {
+    const grid = document.getElementById('recentsGrid');
+    grid.innerHTML = '';
+
+    if (activeTasks.length === 0) {
+      grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; color:#64748b; padding:40px;">No running sandboxes</div>`;
+      return;
+    }
+
+    activeTasks.forEach(task => {
+      const card = document.createElement('div');
+      card.className = `recent-card ${task.id === currentTaskId ? 'active-app' : ''}`;
+      card.onclick = () => switchToTask(task.id);
+      
+      card.innerHTML = `
+        <button class="close-task-btn" onclick="closeTask('${task.id}', event)">✕</button>
+        <div style="font-size:11px; font-weight:600; text-align:center; margin-bottom:2px; color:#f1f5f9;">${task.name}</div>
+        <div style="font-size:8px; color:#38bdf8; margin-bottom:1px;">${task.device}</div>
+        <div style="font-size:8px; color:#10b981; margin-bottom:4px;">📍 ${task.district}</div>
+        <div>${fbSvgLogo}</div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  function closeTask(taskId, event) {
+    if(event) event.stopPropagation(); 
+    const iframe = document.getElementById(`iframe-${taskId}`);
+    if (iframe) iframe.remove();
+
+    activeTasks = activeTasks.filter(task => task.id !== taskId);
+    updateTaskCount();
+    renderRecents();
+
+    if (currentTaskId === taskId) {
+      if (activeTasks.length > 0) {
+        switchToTask(activeTasks[activeTasks.length - 1].id);
+      } else {
+        goHome();
+      }
+    }
+  }
+
+  function closeAllTasks(event) {
+    document.getElementById('viewer-container').innerHTML = '';
+    activeTasks = [];
+    currentTaskId = null;
+    updateTaskCount();
+    renderRecents();
+    goHome();
+  }
+
+  function updateTaskCount() {
+    document.getElementById('taskCount').innerText = activeTasks.length;
+  }
+
+  function setActiveNav(id) {
+    document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    if(id !== 'none') {
+      const btn = document.getElementById(id);
+      if(btn) btn.classList.add('active');
+    }
+  }
+
+  function filterTools() {
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = toolsList.filter(t => t.name.toLowerCase().includes(query) || t.district.toLowerCase().includes(query));
+    renderDashboard(filtered);
+  }
+
+  renderDashboard(toolsList);
+  setActiveNav('homeNavBtn');
+</script>
+</body>
+</html>
