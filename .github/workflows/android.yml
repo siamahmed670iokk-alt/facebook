@@ -31,7 +31,8 @@ jobs:
         npm install
         npm run build --if-present
         npm install -g @capacitor/cli
-        npx cap sync android
+        npx cap copy android
+        npx cap update android
 
     - name: Grant execute permission for gradlew
       working-directory: ./android
