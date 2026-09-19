@@ -26,12 +26,11 @@ jobs:
       with:
         node-version: '20'
 
-    - name: Install dependencies and update capacitor
+    - name: Install dependencies and sync capacitor
       run: |
+        npm install
         npm install -g @capacitor/cli
-        cd android
-        npm install --legacy-peer-deps
-        npx cap update android
+        npx cap sync android
 
     - name: Grant execute permission for gradlew
       working-directory: ./android
@@ -39,4 +38,4 @@ jobs:
       
     - name: Build with Gradle
       working-directory: ./android
-      run: ./gradlew build
+      run: ./gradlew assembleDebug
