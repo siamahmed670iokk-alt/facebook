@@ -2,7 +2,5 @@
   "appId": "com.fb.multilogin",
   "appName": "FB Manager",
   "webDir": "www",
-  "server": {
-    "androidScheme": "https"
-  }
+  "bundledWebRuntime": false
 }
